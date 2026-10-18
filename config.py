@@ -12,11 +12,13 @@ LangChain idea to notice:
 """
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Gemini's chat model class and embedding model class.
 # They live in the "langchain-google-genai" integration package.
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_core.rate_limiters import InMemoryRateLimiter
 
 
 # ------------------------------------------------------------------
@@ -27,8 +29,11 @@ from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmb
 # have to pass the key around by hand.
 load_dotenv()
 
-if not os.getenv("GOOGLE_API_KEY"):
-    print("WARNING: GOOGLE_API_KEY was not found. Copy .env.example to .env and add your key.")
+# The Gemini classes accept the key under either name: GOOGLE_API_KEY or GEMINI_API_KEY.
+GEMINI_KEY_FOUND = bool(os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"))
+
+if not GEMINI_KEY_FOUND:
+    print("WARNING: No Gemini API key found. Copy .env.example to .env and add GOOGLE_API_KEY.")
 
 
 # ------------------------------------------------------------------
@@ -60,9 +65,21 @@ def print_tracing_status():
 CHAT_MODEL_NAME = "gemini-3.5-flash"         # the LLM that writes answers
 EMBEDDING_MODEL_NAME = "gemini-embedding-001"  # the model that turns text into numbers (vectors)
 
-NOTES_FOLDER = "notes"                       # put your study notes (.txt / .md / .pdf) here
-VECTOR_STORE_PATH = "data/notes_index.json"  # where the searchable index of your notes is saved
-FLASHCARDS_FILE = "data/flashcards.txt"      # where the agent saves flashcards for you
+# All paths are built from the folder this file lives in, so the project works
+# no matter which folder you start it from (e.g. the Streamlit app in app/).
+PROJECT_DIR = Path(__file__).parent
+NOTES_FOLDER = str(PROJECT_DIR / "notes")                       # your study notes (.txt / .md / .pdf)
+VECTOR_STORE_PATH = str(PROJECT_DIR / "data" / "notes_index.json")  # the saved searchable index
+FLASHCARDS_FILE = str(PROJECT_DIR / "data" / "flashcards.txt")      # flashcards saved by the app/agent
+EVAL_DATASET_PATH = str(PROJECT_DIR / "evaluation" / "test_questions.json")  # quality test set (step 16)
+EVAL_RESULTS_PATH = str(PROJECT_DIR / "data" / "eval_results.json")          # latest quality score
+
+# Optional: limit how many LLM requests per minute we send.
+# The free Gemini tier only allows a few requests per minute. If you see
+# "429 / quota exceeded" errors, add e.g. GEMINI_REQUESTS_PER_MINUTE=10 to .env.
+# InMemoryRateLimiter is a LangChain helper that makes calls WAIT their turn.
+_rpm = os.getenv("GEMINI_REQUESTS_PER_MINUTE")
+RATE_LIMITER = InMemoryRateLimiter(requests_per_second=float(_rpm) / 60) if _rpm else None
 
 
 # ------------------------------------------------------------------
@@ -80,6 +97,7 @@ def get_chat_model(temperature: float = 0.3):
     return ChatGoogleGenerativeAI(
         model=CHAT_MODEL_NAME,
         temperature=temperature,
+        rate_limiter=RATE_LIMITER,  # None = no limit
     )
 
 

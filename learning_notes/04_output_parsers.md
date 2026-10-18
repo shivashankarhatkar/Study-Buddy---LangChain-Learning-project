@@ -64,7 +64,7 @@ First you **describe the shape** of the data you want using a Pydantic class. Th
 class QuizQuestion(BaseModel):
     question: str        = Field(description="The question text")
     options: list[str]   = Field(description="Exactly 4 possible answers")
-    correct_answer: str  = Field(description="The correct option, copied exactly from options")
+    correct_answers: list[str] = Field(description="ALL correct options (one or more)")
     explanation: str     = Field(description="One sentence explaining why the answer is correct")
 
 class Quiz(BaseModel):
@@ -82,7 +82,7 @@ Picture it as a form that Gemini **must** fill in:
  │  │ question: "Largest planet?"     │ │
  │  │ options: [Mars, Jupiter,        │ │
  │  │           Earth, Venus]         │ │
- │  │ correct_answer: "Jupiter"       │ │
+ │  │ correct_answers: ["Jupiter"]    │ │
  │  │ explanation: "It's 11x wider.." │ │
  │  └─────────────────────────────────┘ │
  │  ┌──────────── QuizQuestion ───────┐ │
@@ -99,7 +99,7 @@ quiz = quiz_llm.invoke("Create a 2 question quiz about the water cycle")
 quiz.questions[0].options          # → ['Evaporation', 'Condensation', ...]   real Python data!
 ```
 
-📍 **This powers option 3 in the app (Quiz me):** `main.py` loops over `quiz.questions`, prints the `options`, and compares your choice with `correct_answer`.
+📍 **This powers option 3 in the app (Quiz me):** `main.py` loops over `quiz.questions`, prints the `options`, and compares your choice(s) with `correct_answers`. The web app's Quiz tab shows each option as a checkbox, because a question can have more than one correct answer.
 
 > 💡 The `Field(description=...)` texts are **sent to Gemini as instructions**, so write them clearly!
 

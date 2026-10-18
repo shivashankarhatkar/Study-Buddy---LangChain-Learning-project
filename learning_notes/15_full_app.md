@@ -102,4 +102,4 @@ Each idea uses what you've learned. Try them one at a time:
 
 🎉 **Congratulations, you now know the core of LangChain!**
 
-⬅️ [14 · LangSmith Tracing](14_langsmith_tracing.md) · 🏠 [00 · Big Picture](00_big_picture.md)
+⬅️ [14 · LangSmith Tracing](14_langsmith_tracing.md) · ➡️ **Next (production upgrades):** [16 · Conversational RAG](16_conversational_rag.md)

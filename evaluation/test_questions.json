@@ -1,0 +1,17 @@
+[
+  {"question": "Which planet is the largest in the Solar System?", "reference_answer": "Jupiter, a gas giant about 11 times wider than Earth.", "in_notes": true},
+  {"question": "Why is Venus hotter than Mercury even though it is farther from the Sun?", "reference_answer": "Venus has a thick carbon dioxide atmosphere that traps heat (a runaway greenhouse effect), reaching about 465°C.", "in_notes": true},
+  {"question": "What is the tallest volcano in the Solar System?", "reference_answer": "Olympus Mons on Mars, about 22 km high.", "in_notes": true},
+  {"question": "Why was Pluto reclassified as a dwarf planet?", "reference_answer": "In 2006 the IAU reclassified it because, although it orbits the Sun and is round, it has not cleared other objects from its orbit.", "in_notes": true},
+  {"question": "Which planet has the fastest winds?", "reference_answer": "Neptune, with winds over 2,000 km/h.", "in_notes": true},
+  {"question": "What are the products of photosynthesis?", "reference_answer": "Glucose and oxygen.", "in_notes": true},
+  {"question": "Where in the chloroplast does the Calvin cycle happen?", "reference_answer": "In the stroma.", "in_notes": true},
+  {"question": "How does carbon dioxide enter a leaf?", "reference_answer": "Through small pores called stomata.", "in_notes": true},
+  {"question": "Name the limiting factors of photosynthesis.", "reference_answer": "Light intensity, carbon dioxide concentration and temperature.", "in_notes": true},
+  {"question": "What is the difference between a list and a tuple in Python?", "reference_answer": "A list is mutable (can be changed) while a tuple is immutable (cannot be changed).", "in_notes": true},
+  {"question": "What does range(5) produce in Python?", "reference_answer": "The numbers 0, 1, 2, 3, 4.", "in_notes": true},
+  {"question": "What is an infinite loop?", "reference_answer": "A while loop whose condition never becomes False, so it never stops.", "in_notes": true},
+  {"question": "Who wrote the play Romeo and Juliet?", "reference_answer": "Not in the notes: the assistant should say it couldn't find this in the notes.", "in_notes": false},
+  {"question": "What is the boiling point of mercury?", "reference_answer": "Not in the notes: the assistant should say it couldn't find this in the notes.", "in_notes": false},
+  {"question": "How do I install Python packages with pip?", "reference_answer": "Not in the notes: the assistant should say it couldn't find this in the notes.", "in_notes": false}
+]

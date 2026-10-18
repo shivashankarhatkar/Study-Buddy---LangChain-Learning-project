@@ -18,6 +18,7 @@ Run:   python main.py
 """
 
 from config import print_tracing_status
+from step04_output_parsers import answers_match
 from step05_chains_lcel import build_summary_chain
 from step07_document_loaders import load_notes
 from step10_vector_store import build_vector_store
@@ -89,15 +90,16 @@ def take_quiz():
         for letter, option in zip(letters, q.options):
             print(f"   {letter}) {option}")
 
-        answer = input("Your answer (a/b/c/d): ").strip().lower()
-        chosen_option = q.options[letters.index(answer)] if answer in letters[:len(q.options)] else ""
+        # A question can have more than one correct answer, e.g. "a,c"
+        answer = input("Your answer(s), e.g. b or a,c: ").strip().lower()
+        chosen = [q.options[letters.index(letter.strip())]
+                  for letter in answer.split(",") if letter.strip() in letters[:len(q.options)]]
 
-        # Compare ignoring capital letters and extra spaces
-        if chosen_option.strip().lower() == q.correct_answer.strip().lower():
+        if answers_match(chosen, q.correct_answers):
             score += 1
             print("Correct! " + q.explanation)
         else:
-            print(f"Not quite. Correct answer: {q.correct_answer}. {q.explanation}")
+            print(f"Not quite. Correct answer(s): {', '.join(q.correct_answers)}. {q.explanation}")
 
     print(f"\nYour score: {score}/{len(quiz.questions)}")
 

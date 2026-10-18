@@ -39,7 +39,7 @@ from config import NOTES_FOLDER
 
 class StudyNotesLoader(BaseLoader):
     """
-    Loads every .txt, .md and .pdf file from a folder.
+    Loads every .txt, .md and .pdf file from a folder (or one single file).
 
     - Text/markdown files -> one Document per file
     - PDF files           -> one Document per page (so we know the page number)
@@ -48,12 +48,14 @@ class StudyNotesLoader(BaseLoader):
     which simply collects everything lazy_load() yields into a list.
     """
 
-    def __init__(self, folder: str):
-        self.folder = Path(folder)
+    def __init__(self, path: str):
+        self.path = Path(path)
 
     def lazy_load(self):
-        # sorted() just makes the order predictable
-        for file_path in sorted(self.folder.iterdir()):
+        # A single file -> just that file. A folder -> every file in it (sorted for a predictable order).
+        files = [self.path] if self.path.is_file() else sorted(self.path.iterdir())
+
+        for file_path in files:
             suffix = file_path.suffix.lower()
 
             if suffix in (".txt", ".md"):
@@ -79,6 +81,11 @@ def load_notes(folder: str = NOTES_FOLDER) -> list[Document]:
     """Load all notes from the notes folder as a list of Documents."""
     loader = StudyNotesLoader(folder)
     return loader.load()
+
+
+def load_file(file_path: str) -> list[Document]:
+    """Load ONE file (used when a new file is uploaded in the web app)."""
+    return StudyNotesLoader(file_path).load()
 
 
 if __name__ == "__main__":

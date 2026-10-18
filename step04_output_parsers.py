@@ -74,17 +74,38 @@ def json_parser_demo():
 # The Study Buddy app uses these classes to generate quizzes.
 
 class QuizQuestion(BaseModel):
-    """One multiple-choice question."""
+    """One multiple-choice question (it may have more than one correct answer)."""
     question: str = Field(description="The question text")
     options: list[str] = Field(description="Exactly 4 possible answers")
-    correct_answer: str = Field(description="The correct option, copied exactly from options")
-    explanation: str = Field(description="One sentence explaining why the answer is correct")
+    correct_answers: list[str] = Field(description="ALL correct options (one or more), each copied exactly from options")
+    explanation: str = Field(description="One sentence explaining why these answers are correct")
 
 
 class Quiz(BaseModel):
     """A short multiple-choice quiz."""
     topic: str = Field(description="The topic of the quiz")
     questions: list[QuizQuestion] = Field(description="The list of quiz questions")
+
+
+def answers_match(chosen: list[str], correct: list[str]) -> bool:
+    """A question is right only if the student picked EXACTLY the correct options
+    (ignoring capital letters and extra spaces)."""
+    def normalize(options):
+        return {option.strip().lower() for option in options}
+    return normalize(chosen) == normalize(correct)
+
+
+# The same idea for flashcards (used by build_flashcards_chain in step 11)
+class Flashcard(BaseModel):
+    """One revision flashcard."""
+    question: str = Field(description="A short question on the front of the card")
+    answer: str = Field(description="A short answer (1-2 sentences) on the back of the card")
+
+
+class FlashcardSet(BaseModel):
+    """A set of revision flashcards about one topic."""
+    topic: str = Field(description="The topic of the flashcards")
+    cards: list[Flashcard] = Field(description="The flashcards")
 
 
 def structured_output_demo():
@@ -103,7 +124,7 @@ def structured_output_demo():
         print(f"\nQ{number}. {q.question}")
         for option in q.options:
             print("    -", option)
-        print("  Answer:", q.correct_answer)
+        print("  Answer(s):", ", ".join(q.correct_answers))
 
 
 if __name__ == "__main__":

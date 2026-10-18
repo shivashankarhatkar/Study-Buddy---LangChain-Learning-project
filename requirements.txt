@@ -24,3 +24,6 @@ langsmith
 
 # Reads our API key from the .env file
 python-dotenv
+
+# The web frontend (run: streamlit run app/streamlit_app.py)
+streamlit>=1.50

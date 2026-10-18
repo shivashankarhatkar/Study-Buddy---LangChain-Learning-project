@@ -124,6 +124,29 @@ def revision_session(topic):
 
 ---
 
+### `with trace(...) as run`: one trace for several steps, plus user feedback
+
+The web app runs *rewrite → retrieve → stream answer* as separate calls. Wrapping them in `trace()` groups them into **one** trace. The `run.id` then lets us attach the user's 👍/👎 to that exact answer:
+
+```python
+with trace("Ask Notes", inputs={"question": q}) as run:
+    ...                                   # every LangChain call in here is nested under "Ask Notes"
+    run.end(outputs={"answer": answer})
+
+send_feedback(run.id, thumbs_up=True)     # → appears as "user_rating = 1" on the trace
+```
+
+```
+ ▼ Ask Notes                 👍 user_rating: 1
+   ├─ Rewrite Follow-up
+   ├─ Retrieve Passages
+   └─ Generate Answer
+```
+
+In LangSmith you can then filter for 👎 answers, and see exactly what went wrong.
+
+---
+
 ## 📊 What else LangSmith shows you
 
 - ⏱️ **Latency:** which step is slow?

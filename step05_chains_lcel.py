@@ -58,9 +58,9 @@ SUMMARY_PROMPT = ChatPromptTemplate.from_messages([
 ])
 
 
-def build_summary_chain():
+def build_summary_chain(temperature: float = 0.3):
     """Input: {"notes": "...long text..."}  ->  Output: summary string"""
-    return SUMMARY_PROMPT | get_chat_model() | StrOutputParser()
+    return SUMMARY_PROMPT | get_chat_model(temperature) | StrOutputParser()
 
 
 # ------------------------------------------------------------------
@@ -69,20 +69,26 @@ def build_summary_chain():
 QUIZ_PROMPT = ChatPromptTemplate.from_messages([
     ("system",
      "You are Study Buddy. Write {num_questions} multiple-choice questions to test a "
-     "student on the study material below. Each question must have exactly 4 options. "
-     "Use ONLY facts found in the material.\n\nSTUDY MATERIAL:\n{material}"),
+     "student on the study material below.\n"
+     "- Each question has exactly 4 options and ONE OR MORE correct answers. "
+     "Make some questions have more than one correct answer.\n"
+     "- Difficulty: {difficulty}. (Easy = recall a single fact. Medium = understand and explain. "
+     "Hard = combine several facts or apply them.)\n"
+     "- Use ONLY facts found in the material.\n\nSTUDY MATERIAL:\n{material}"),
     ("human", "Make the quiz about: {topic}"),
-])
+]).partial(difficulty="medium")
+# .partial() gives {difficulty} a DEFAULT value. Callers may still pass their own
+# "difficulty" (the web app does); callers that don't pass it get "medium".
 
 
-def build_quiz_chain():
+def build_quiz_chain(temperature: float = 0.3):
     """
-    Input:  {"material": ..., "topic": ..., "num_questions": ...}
+    Input:  {"material": ..., "topic": ..., "num_questions": ..., "difficulty" (optional)}
     Output: a Quiz object (see step04)
 
     Note: no parser needed here - with_structured_output() already returns a Quiz.
     """
-    quiz_llm = get_chat_model().with_structured_output(Quiz)
+    quiz_llm = get_chat_model(temperature).with_structured_output(Quiz)
     return QUIZ_PROMPT | quiz_llm
 
 
@@ -170,4 +176,4 @@ if __name__ == "__main__":
     print("\n=== 6. Chain feeding another chain ===")
     quiz = build_explain_then_quiz_chain().invoke(topic_input)
     for q in quiz.questions:
-        print("Q:", q.question, "| Answer:", q.correct_answer)
+        print("Q:", q.question, "| Answer(s):", ", ".join(q.correct_answers))

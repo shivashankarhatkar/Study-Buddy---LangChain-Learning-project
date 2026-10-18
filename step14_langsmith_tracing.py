@@ -38,7 +38,9 @@ Run this file:   python step14_langsmith_tracing.py
 Then open https://smith.langchain.com -> Projects -> study-buddy
 """
 
-from langsmith import traceable, tracing_context
+import os
+
+from langsmith import Client, trace, traceable, tracing_context
 
 from config import print_tracing_status
 from step05_chains_lcel import build_explain_chain, build_summary_chain
@@ -125,6 +127,49 @@ def no_tracing_demo():
     print("(This run was NOT sent to LangSmith.)")
 
 
+# ------------------------------------------------------------------
+# 6. Wrapping several steps in ONE trace, and collecting user feedback
+# ------------------------------------------------------------------
+# The web app does "rewrite -> retrieve -> stream answer" as separate calls.
+# "with trace(...) as run:" groups them under one parent run. Every LangChain
+# call made inside the block is nested underneath it automatically.
+# The run has an ID, which lets us attach user FEEDBACK (thumbs up/down) to it.
+#
+#     Ask Notes                 ← run (has run.id)    👍 user_rating = 1
+#     ├── Rewrite Follow-up
+#     ├── Retrieve Passages
+#     └── Generate Answer
+#
+def tracing_enabled() -> bool:
+    return os.getenv("LANGSMITH_TRACING", "").lower() == "true" and bool(os.getenv("LANGSMITH_API_KEY"))
+
+
+def get_trace_url(run) -> str | None:
+    """Link to this run in the LangSmith website (None if tracing is off or offline)."""
+    if not tracing_enabled():
+        return None
+    try:
+        return run.get_url()
+    except Exception:
+        return None
+
+
+def send_feedback(run_id, thumbs_up: bool, comment: str | None = None):
+    """Attach a user's 👍 / 👎 to a run. You can then filter runs by rating in LangSmith."""
+    if tracing_enabled():
+        Client().create_feedback(run_id=run_id, key="user_rating",
+                                 score=1 if thumbs_up else 0, comment=comment)
+
+
+def feedback_demo():
+    with trace("Explain With Feedback", inputs={"topic": "friction"}, tags=["study-buddy", "demo"]) as run:
+        answer = build_explain_chain().invoke({"topic": "friction", "level": "beginner"})
+        run.end(outputs={"answer": answer})  # record what the whole block produced
+    print(answer)
+    send_feedback(run.id, thumbs_up=True, comment="Clear explanation")
+    print("Trace URL:", get_trace_url(run))
+
+
 if __name__ == "__main__":
     print_tracing_status()
 
@@ -142,5 +187,8 @@ if __name__ == "__main__":
 
     print("\n=== 5. Turning tracing off ===")
     no_tracing_demo()
+
+    print("\n=== 6. One trace for several steps + feedback ===")
+    feedback_demo()
 
     print("\nNow open https://smith.langchain.com and look at your 'study-buddy' project!")

@@ -82,6 +82,25 @@ def show_flashcards() -> str:
         return file.read()
 
 
+def read_flashcards() -> list[dict]:
+    """
+    Normal Python helper (NOT a tool): read the flashcards file as a list of
+    {"question": ..., "answer": ...} dicts, so the web app can display them as cards.
+    """
+    if not os.path.exists(FLASHCARDS_FILE):
+        return []
+    cards = []
+    with open(FLASHCARDS_FILE, encoding="utf-8") as file:
+        for line in file:
+            if line.startswith("Q: "):
+                cards.append({"question": line[3:].strip(), "answer": ""})
+            elif line.startswith("A: ") and cards:
+                cards[-1]["answer"] = line[3:].strip()
+            elif line.strip() and cards:  # an answer that continues on the next line
+                cards[-1]["answer"] += " " + line.strip()
+    return cards
+
+
 # A list of all tools, and a name -> tool lookup (used to run a tool by name)
 STUDY_TOOLS = [search_my_notes, calculate, save_flashcard, show_flashcards]
 TOOLS_BY_NAME = {t.name: t for t in STUDY_TOOLS}

@@ -34,6 +34,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
 from config import get_chat_model
+from step04_output_parsers import FlashcardSet
 from step05_chains_lcel import build_quiz_chain
 from step10_vector_store import load_vector_store
 
@@ -117,6 +118,34 @@ def build_notes_quiz_chain():
     )
 
 
+# ------------------------------------------------------------------
+# Flashcards from notes: the SAME pattern as the quiz, with a different schema
+# ------------------------------------------------------------------
+FLASHCARDS_PROMPT = ChatPromptTemplate.from_messages([
+    ("system",
+     "You are Study Buddy. Create {num_cards} revision flashcards from the study material below. "
+     "Each card tests ONE fact. Use ONLY facts found in the material.\n\nSTUDY MATERIAL:\n{material}"),
+    ("human", "Make flashcards about: {topic}"),
+])
+
+
+def build_flashcards_chain():
+    """Input: {"material": ..., "topic": ..., "num_cards": ...}  ->  Output: FlashcardSet (see step04)"""
+    return FLASHCARDS_PROMPT | get_chat_model().with_structured_output(FlashcardSet)
+
+
+def build_notes_flashcards_chain():
+    """
+    Input:  {"topic": ..., "num_cards": ...}
+    Output: FlashcardSet, with cards based on the student's own notes.
+    """
+    retriever = get_retriever(k=6)
+    return (
+        RunnablePassthrough.assign(material=itemgetter("topic") | retriever | format_docs)
+        | build_flashcards_chain()
+    )
+
+
 if __name__ == "__main__":
     print("=== 1. What does the retriever return? ===")
     for doc in get_retriever(k=2).invoke("What is a Python list?"):
@@ -136,4 +165,4 @@ if __name__ == "__main__":
     print("\n=== 5. Quiz from notes ===")
     quiz = build_notes_quiz_chain().invoke({"topic": "the planets", "num_questions": 2})
     for q in quiz.questions:
-        print("Q:", q.question, "| Answer:", q.correct_answer)
+        print("Q:", q.question, "| Answer(s):", ", ".join(q.correct_answers))
